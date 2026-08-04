@@ -1,0 +1,11 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - '1883:1883'
+
+  devices-simulator:
+    build:
+      context: ./Devices-Simulator
+    depends_on:
+      - mosquitto
