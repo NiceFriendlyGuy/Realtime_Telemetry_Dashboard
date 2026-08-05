@@ -4,6 +4,15 @@ services:
     ports:
       - '1883:1883'
 
+  timescaledb:
+    image: timescale/timescaledb:2.23.0-pg18
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_PASSWORD: telemetry
+      POSTGRES_DB: telemetry
+    ports:
+      - '5432:5432'
+
   devices-simulator:
     build:
       context: ./Devices-Simulator

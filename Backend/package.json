@@ -15,11 +15,13 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "@types/pg": "^8.20.4",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "mqtt": "^5.15.2",
+    "pg": "^8.22.0",
     "zod": "^4.4.3"
   }
 }

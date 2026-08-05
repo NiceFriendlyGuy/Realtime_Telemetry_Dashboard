@@ -1,8 +1,15 @@
 import mqtt from 'mqtt';
 import { z } from 'zod';
 import { ReadingSchema } from './schema.js';
+import { testConnection, initDb, insertReading} from './db.js';
 
 console.log("Backend starting...");
+
+testConnection()
+  .then(() => initDb())
+  .catch((err) => {
+    console.error('Database connection failed:', err.message);
+})
 
 const client = mqtt.connect('mqtt://localhost:1883');
 
@@ -21,7 +28,7 @@ client.on('error', (err) => {
   console.error('MQTT connection error:', err.message);
 });
 
-client.on('message', (topic, payload) => {
+client.on('message', async (topic, payload) => {
   let parsed: unknown;
 
   try {
@@ -39,6 +46,10 @@ client.on('message', (topic, payload) => {
   }
 
   const reading = result.data;
-
-  console.log('Valid reading', reading);
+  try {
+    await insertReading(reading);
+    console.log('Saved reading:', reading);
+  } catch(err) {
+    console.log('Failed to save reading:', (err as Error).message);
+  }
 });
