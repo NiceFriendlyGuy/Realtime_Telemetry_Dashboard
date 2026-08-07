@@ -2,8 +2,37 @@ import mqtt from 'mqtt';
 import { z } from 'zod';
 import { ReadingSchema } from './schema.js';
 import { testConnection, initDb, insertReading} from './db.js';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import express from 'express';
 
 console.log("Backend starting...");
+
+const app = express();
+const server = createServer(app);
+const wss = new WebSocketServer({server, path:'/ws' });
+
+
+wss.on('connection', (socket) => {
+  console.log('Dashboard client connected');
+
+  socket.on('close', () => {
+    console.log('Dashboard client disconnected');
+  });
+});
+
+type MessageType = 'reading' | 'alert' | 'nodeState';
+
+function broadcast(type: MessageType, payload: unknown): void {
+  const message = JSON.stringify({type, payload});
+
+  for(const socket of wss.clients) {
+    if (socket.readyState === socket.OPEN) {
+      socket.send(message);
+    }
+  }
+}
+
 
 testConnection()
   .then(() => initDb())
@@ -49,7 +78,12 @@ client.on('message', async (topic, payload) => {
   try {
     await insertReading(reading);
     console.log('Saved reading:', reading);
+    broadcast('reading', reading);
   } catch(err) {
     console.log('Failed to save reading:', (err as Error).message);
   }
+});
+
+server.listen(3000,() => {
+  console.log('Server listening on :3000');
 });
