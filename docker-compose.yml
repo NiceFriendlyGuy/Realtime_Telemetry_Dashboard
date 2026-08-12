@@ -33,3 +33,11 @@ services:
       depends_on:
         - mosquitto
         - timescaledb
+
+  frontend:
+    build:
+      context: ./Frontend
+    ports:
+      - '4200:80'
+    depends_on:
+      - backend
