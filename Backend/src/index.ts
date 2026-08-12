@@ -8,6 +8,8 @@ import express from 'express';
 
 console.log("Backend starting...");
 
+const PORT = Number(process.env.PORT ?? 3000);
+
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({server, path:'/ws' });
@@ -40,7 +42,7 @@ testConnection()
     console.error('Database connection failed:', err.message);
 })
 
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect(process.env.MQTT_URL ?? 'mqtt://localhost:1883');
 
 client.on('connect', () => {
   console.log('Connected to MQTT broker');
@@ -84,6 +86,6 @@ client.on('message', async (topic, payload) => {
   }
 });
 
-server.listen(3000,() => {
-  console.log('Server listening on :3000');
+server.listen(PORT,() => {
+  console.log(`Server listening on :${PORT}`);
 });

@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-    connectionString: 'postgres://telemetry:telemetry@localhost:5432/telemetry',
+    connectionString: process.env.DATABASE_URL ?? 'postgres://telemetry:telemetry@localhost:5432/telemetry',
 });
 
 export async function testConnection(): Promise<void> {

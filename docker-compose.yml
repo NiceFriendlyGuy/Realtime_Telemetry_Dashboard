@@ -16,5 +16,20 @@ services:
   devices-simulator:
     build:
       context: ./Devices-Simulator
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
     depends_on:
       - mosquitto
+
+  backend:
+      build:
+        context: ./Backend
+      environment:
+        MQTT_URL: mqtt://mosquitto:1883
+        DATABASE_URL: postgres://telemetry:telemetry@timescaledb:5432/telemetry
+        PORT: 3000
+      ports:
+        - '3000:3000'
+      depends_on:
+        - mosquitto
+        - timescaledb
