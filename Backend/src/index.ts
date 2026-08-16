@@ -5,6 +5,7 @@ import { testConnection, initDb, insertReading} from './db.js';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
+import { isAnomaly } from './anomalyDetection.js';
 
 console.log("Backend starting...");
 
@@ -77,9 +78,10 @@ client.on('message', async (topic, payload) => {
   }
 
   const reading = result.data;
+  const detectedAnomaly = isAnomaly(reading.metric, reading.value)
   try {
-    await insertReading(reading);
-    console.log('Saved reading:', reading);
+    await insertReading(reading, detectedAnomaly);
+    console.log('Saved reading:', reading, '| detectedAnomaly:', detectedAnomaly);
     broadcast('reading', reading);
   } catch(err) {
     console.log('Failed to save reading:', (err as Error).message);

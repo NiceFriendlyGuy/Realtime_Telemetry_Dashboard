@@ -17,7 +17,8 @@ export async function initDb(): Promise<void> {
             metric  TEXT NOT NULL,
             value   DOUBLE PRECISION NOT NULL,
             unit    TEXT NOT NULL,
-            anomaly BOOLEAN NOT NULL DEFAULT FALSE
+            anomaly BOOLEAN NOT NULL DEFAULT FALSE,
+            detected_anomaly BOOLEAN NOT NULL DEFAULT FALSE
         );
         `);
 
@@ -31,10 +32,11 @@ export async function insertReading(reading: {
     unit: string;
     timestamp: string;
     anomaly: boolean;
-}): Promise<void> {
+    },
+    detectedAnomaly: boolean): Promise<void> {
     await pool.query(
-    `INSERT INTO readings (time, node_id, metric, value, unit, anomaly)
-        VALUES ($1, $2, $3, $4, $5, $6)`,
-    [reading.timestamp, reading.nodeId, reading.metric, reading.value, reading.unit, reading.anomaly],
+    `INSERT INTO readings (time, node_id, metric, value, unit, anomaly, detected_anomaly)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [reading.timestamp, reading.nodeId, reading.metric, reading.value, reading.unit, reading.anomaly, detectedAnomaly],
   );
 }
