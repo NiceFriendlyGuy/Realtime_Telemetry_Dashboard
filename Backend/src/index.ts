@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
 import { isAnomaly } from './anomalyDetection.js';
+import { sweepOfflineNodes, recordReading } from './nodeState.js';
 
 console.log("Backend starting...");
 
@@ -79,10 +80,12 @@ client.on('message', async (topic, payload) => {
 
   const reading = result.data;
   const detectedAnomaly = isAnomaly(reading.metric, reading.value)
+  const nodeState = recordReading(reading.nodeId, detectedAnomaly);
   try {
     await insertReading(reading, detectedAnomaly);
     console.log('Saved reading:', reading, '| detectedAnomaly:', detectedAnomaly);
     broadcast('reading', reading);
+    broadcast('nodeState', nodeState);
   } catch(err) {
     console.log('Failed to save reading:', (err as Error).message);
   }
@@ -91,3 +94,12 @@ client.on('message', async (topic, payload) => {
 server.listen(PORT,() => {
   console.log(`Server listening on :${PORT}`);
 });
+
+const intervalTime = 2000;
+
+setInterval(() => {
+  const changedNodes = sweepOfflineNodes();
+  for (const nodeState of changedNodes) {
+    broadcast('nodeState', nodeState);
+  }    
+}, intervalTime);

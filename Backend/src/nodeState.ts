@@ -5,6 +5,7 @@ export interface NodeState {
 }
 
 const nodes = new Map<string, NodeState>();
+const OFFLINE_THRESHOLD_MS = 10_000;
 
 export function recordReading(nodeId: string, anomaly: boolean): NodeState {
   const existing = nodes.get(nodeId);
@@ -22,8 +23,6 @@ export function recordReading(nodeId: string, anomaly: boolean): NodeState {
   return state;
 }
 
-const OFFLINE_THRESHOLD_MS = 10_000;
-
 export function sweepOfflineNodes(): NodeState[] {
   const now = Date.now();
   const changed: NodeState[] = [];
@@ -39,3 +38,4 @@ export function sweepOfflineNodes(): NodeState[] {
 
   return changed;
 }
+
