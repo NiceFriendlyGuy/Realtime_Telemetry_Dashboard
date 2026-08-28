@@ -39,3 +39,7 @@ export function sweepOfflineNodes(): NodeState[] {
   return changed;
 }
 
+export function resetNodeState(): void {
+  nodes.clear();
+}
+
