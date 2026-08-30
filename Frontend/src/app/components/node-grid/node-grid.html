@@ -1,0 +1,6 @@
+<p>node-grid works!</p>
+@for(node of telemetrySocket.nodeList(); track node.nodeId) {
+    <div>
+        {{ node.nodeId }} - {{ node.status }}
+    </div>
+}
