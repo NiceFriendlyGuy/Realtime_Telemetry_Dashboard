@@ -1,6 +1,12 @@
 <p>node-grid works!</p>
 @for(node of telemetrySocket.nodeList(); track node.nodeId) {
     <div>
-        {{ node.nodeId }} - {{ node.status }}
+        {{ node.nodeId }} - {{ node.status }} 
+    
+        @for(reading of getReadingsForNode(node.nodeId); track reading.metric) {
+            <div>
+                {{ reading.metric }}: {{ reading.value }} {{ reading.unit }}
+            </div>
+        }
     </div>
 }
