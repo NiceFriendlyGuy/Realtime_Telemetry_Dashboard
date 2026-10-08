@@ -1,12 +1,17 @@
-<p>node-grid works!</p>
-@for(node of telemetrySocket.nodeList(); track node.nodeId) {
-    <div>
-        {{ node.nodeId }} - {{ node.status }} 
-    
-        @for(reading of getReadingsForNode(node.nodeId); track reading.metric) {
-            <div>
-                {{ reading.metric }}: {{ reading.value }} {{ reading.unit }}
-            </div>
-        }
+<div class="node-grid">
+@for (node of telemetrySocket.nodeList(); track node.nodeId) {
+  <div class="node-card" [class]="node.status">
+    <div class="node-card__header">
+      <span class="node-card__id">{{ node.nodeId }}</span>
+      <span class="node-card__status">{{ node.status }}</span>
     </div>
+
+    @for (reading of getReadingsForNode(node.nodeId); track reading.metric) {
+      <div class="node-card__metric">
+        <span class="node-card__metric-name">{{ reading.metric }}</span>
+        <span class="node-card__metric-value">{{ reading.value }} {{ reading.unit }}</span>
+      </div>
+    }
+  </div>
 }
+</div>

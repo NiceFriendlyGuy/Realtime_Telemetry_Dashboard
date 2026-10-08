@@ -1,1 +1,17 @@
 /* You can add global styles to this file, and also import other style files */
+:root {
+  --bg: #0B0F14;
+  --surface: #151B24;
+  --text: #DCE1E8;
+  --text-muted: #6B7684;
+  --healthy: #3FA968;
+  --warning: #D9A441;
+  --offline: #B85450;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+}
