@@ -4,7 +4,7 @@ const SPIKE_TEMP_ADDED = 15;
 const BASE_LINE_PULLBACK = 0.1;
 const DRIFT_STRENGTH = 0.5;
 const BASELINE_TEMP = 22;
-const NODE_ID:string = 'sensor-01';
+const NODE_ID: string = process.env.NODE_ID ?? `sensor-${Math.random().toString(36).slice(2, 7)}`;
 
 export interface Reading {
     nodeId: string;
