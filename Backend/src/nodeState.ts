@@ -6,6 +6,7 @@ export interface NodeState {
 
 const nodes = new Map<string, NodeState>();
 const OFFLINE_THRESHOLD_MS = 10_000;
+const PRUNE_AFTER_MS = 60_000;
 
 export function recordReading(nodeId: string, anomaly: boolean): NodeState {
   const existing = nodes.get(nodeId);
@@ -43,3 +44,17 @@ export function resetNodeState(): void {
   nodes.clear();
 }
 
+export function pruneStaleNodes(): string[] {
+  const now = Date.now();
+  const removed: string[] = [];
+
+  for (const [nodeId, state] of nodes) {
+    const age = now - new Date(state.lastSeen).getTime();
+    if (age > PRUNE_AFTER_MS) {
+      nodes.delete(nodeId);
+      removed.push(nodeId);
+    }
+  }
+
+  return removed;
+}

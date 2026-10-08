@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { recordReading, sweepOfflineNodes, resetNodeState } from './nodeState.js';
+import { recordReading, sweepOfflineNodes, resetNodeState, pruneStaleNodes } from './nodeState.js';
 
 describe('nodeState', () => {
   beforeEach(() => {
@@ -33,5 +33,18 @@ describe('nodeState', () => {
     vi.advanceTimersByTime(9_999);
     sweepOfflineNodes();
     expect(state.status).toBe('healthy');
-   });
+  });
+
+  it('does not prune a node before the threshold', () => {
+    recordReading('sensor-01', false);
+    vi.advanceTimersByTime(59_999);
+    expect(pruneStaleNodes()).toEqual([]);
+  });
+
+  it('prunes a node after the threshold and only reports it once', () => {
+    recordReading('sensor-01', false);
+    vi.advanceTimersByTime(60_001);
+    expect(pruneStaleNodes()).toEqual(['sensor-01']);
+    expect(pruneStaleNodes()).toEqual([]);
+  });
 });

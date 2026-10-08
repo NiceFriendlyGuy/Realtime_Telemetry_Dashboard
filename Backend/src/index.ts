@@ -6,7 +6,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
 import { isAnomaly } from './anomalyDetection.js';
-import { sweepOfflineNodes, recordReading } from './nodeState.js';
+import { sweepOfflineNodes, recordReading, pruneStaleNodes } from './nodeState.js';
 
 console.log("Backend starting...");
 
@@ -25,7 +25,7 @@ wss.on('connection', (socket) => {
   });
 });
 
-type MessageType = 'reading' | 'alert' | 'nodeState';
+type MessageType = 'reading' | 'alert' | 'nodeState' | 'nodeRemoved';
 
 function broadcast(type: MessageType, payload: unknown): void {
   const message = JSON.stringify({type, payload});
@@ -102,4 +102,9 @@ setInterval(() => {
   for (const nodeState of changedNodes) {
     broadcast('nodeState', nodeState);
   }    
+
+  for (const nodeId of pruneStaleNodes()) {
+    broadcast('nodeRemoved', { nodeId });
+  }
+  
 }, intervalTime);
