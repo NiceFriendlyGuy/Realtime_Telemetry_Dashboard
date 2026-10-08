@@ -38,6 +38,21 @@ export class TelemetrySocket {
                     };
                 });
             }
+            if (message.type === 'nodeRemoved') {
+                const { nodeId } = message.payload;
+
+                this.nodes.update(current => {
+                    const next = { ...current };
+                    delete next[nodeId];
+                    return next;
+                });
+
+                this.readings.update(current => {
+                    const next = { ...current };
+                    delete next[nodeId];
+                    return next;
+                });
+            }
         };
     }
 }

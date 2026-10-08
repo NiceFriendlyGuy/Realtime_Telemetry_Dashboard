@@ -13,4 +13,7 @@ export interface NodeState {
     status: 'healthy' | 'warning' | 'offline';
 }
 
-export type GatewayMessage = | { type: 'reading'; payload: Reading } | { type: 'nodeState'; payload: NodeState };
+export type GatewayMessage = 
+| { type: 'reading'; payload: Reading } 
+| { type: 'nodeState'; payload: NodeState } 
+| { type: 'nodeRemoved'; payload: { nodeId: string } };
