@@ -8,6 +8,10 @@ const nodes = new Map<string, NodeState>();
 const OFFLINE_THRESHOLD_MS = 10_000;
 const PRUNE_AFTER_MS = 60_000;
 
+export function getAllNodes(): NodeState[] {
+  return Array.from(nodes.values());
+}
+
 export function recordReading(nodeId: string, anomaly: boolean): NodeState {
   const existing = nodes.get(nodeId);
 

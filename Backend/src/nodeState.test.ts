@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { recordReading, sweepOfflineNodes, resetNodeState, pruneStaleNodes } from './nodeState.js';
+import { recordReading, sweepOfflineNodes, resetNodeState, pruneStaleNodes, getAllNodes } from './nodeState.js';
 
 describe('nodeState', () => {
   beforeEach(() => {
@@ -46,5 +46,14 @@ describe('nodeState', () => {
     vi.advanceTimersByTime(60_001);
     expect(pruneStaleNodes()).toEqual(['sensor-01']);
     expect(pruneStaleNodes()).toEqual([]);
+  });
+
+  it('returns every tracked node', () => {
+    recordReading('sensor-01', false);
+    recordReading('sensor-02', true);
+
+    const all = getAllNodes();
+    expect(all).toHaveLength(2);
+    expect(all.map(n => n.nodeId).sort()).toEqual(['sensor-01', 'sensor-02']);
   });
 });

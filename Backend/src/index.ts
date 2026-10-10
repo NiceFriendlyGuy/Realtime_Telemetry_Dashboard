@@ -6,7 +6,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
 import { isAnomaly } from './anomalyDetection.js';
-import { sweepOfflineNodes, recordReading, pruneStaleNodes } from './nodeState.js';
+import { sweepOfflineNodes, recordReading, pruneStaleNodes, getAllNodes } from './nodeState.js';
 
 console.log("Backend starting...");
 
@@ -19,6 +19,8 @@ const wss = new WebSocketServer({server, path:'/ws' });
 
 wss.on('connection', (socket) => {
   console.log('Dashboard client connected');
+
+  socket.send(JSON.stringify({ type: 'snapshot', payload: getAllNodes() }));
 
   socket.on('close', () => {
     console.log('Dashboard client disconnected');
