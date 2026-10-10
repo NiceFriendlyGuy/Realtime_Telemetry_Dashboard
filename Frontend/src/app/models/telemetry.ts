@@ -16,4 +16,5 @@ export interface NodeState {
 export type GatewayMessage = 
 | { type: 'reading'; payload: Reading } 
 | { type: 'nodeState'; payload: NodeState } 
-| { type: 'nodeRemoved'; payload: { nodeId: string } };
+| { type: 'nodeRemoved'; payload: { nodeId: string } }
+| { type: 'snapshot'; payload: NodeState[] };
