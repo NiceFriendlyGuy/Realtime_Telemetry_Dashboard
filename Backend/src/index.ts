@@ -1,12 +1,13 @@
 import mqtt from 'mqtt';
 import { z } from 'zod';
 import { ReadingSchema } from './schema.js';
-import { testConnection, initDb, insertReading} from './db.js';
+import { testConnection, initDb, insertReading, getReadingHistory } from './db.js';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import express from 'express';
 import { isAnomaly } from './anomalyDetection.js';
 import { sweepOfflineNodes, recordReading, pruneStaleNodes, getAllNodes } from './nodeState.js';
+import cors from 'cors';
 
 console.log("Backend starting...");
 
@@ -15,6 +16,24 @@ const PORT = Number(process.env.PORT ?? 3000);
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({server, path:'/ws' });
+app.use(cors({ origin: process.env.CORS_ORIGIN ?? 'http://localhost:4200' }));
+
+
+app.get('/api/readings/:nodeId/:metric', async (req, res) => {
+  const { nodeId, metric } = req.params;
+
+  const requested = Number(req.query.minutes);
+  const minutes = Number.isFinite(requested)
+    ? Math.min(Math.max(Math.floor(requested), 1), 1440)
+    : 15;
+
+  try {
+    res.json(await getReadingHistory(nodeId, metric, minutes));
+  } catch (err) {
+    console.error('History query failed:', (err as Error).message);
+    res.status(500).json({ error: 'Failed to load readings' });
+  }
+});
 
 
 wss.on('connection', (socket) => {
@@ -86,7 +105,7 @@ client.on('message', async (topic, payload) => {
   try {
     await insertReading(reading, detectedAnomaly);
     console.log('Saved reading:', reading, '| detectedAnomaly:', detectedAnomaly);
-    broadcast('reading', reading);
+    broadcast('reading', { ...reading, detectedAnomaly });
     broadcast('nodeState', nodeState);
   } catch(err) {
     console.log('Failed to save reading:', (err as Error).message);

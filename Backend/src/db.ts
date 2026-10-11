@@ -22,6 +22,13 @@ export async function initDb(): Promise<void> {
         );
         `);
 
+        await pool.query(`
+            SELECT create_hypertable('readings', 'time', if_not_exists => TRUE, migrate_data => TRUE);
+        `);
+        await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_readings_node_metric_time ON readings (node_id, metric, time DESC);
+        `);
+
         console.log('Reading table ready');
 }
 
@@ -35,8 +42,19 @@ export async function insertReading(reading: {
     },
     detectedAnomaly: boolean): Promise<void> {
     await pool.query(
-    `INSERT INTO readings (time, node_id, metric, value, unit, anomaly, detected_anomaly)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [reading.timestamp, reading.nodeId, reading.metric, reading.value, reading.unit, reading.anomaly, detectedAnomaly],
+        `INSERT INTO readings (time, node_id, metric, value, unit, anomaly, detected_anomaly)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [reading.timestamp, reading.nodeId, reading.metric, reading.value, reading.unit, reading.anomaly, detectedAnomaly],
+    );
+}
+
+export async function getReadingHistory(nodeId: string, metric: string, minutes: number) {
+  const { rows } = await pool.query(
+    `SELECT time, value, anomaly, detected_anomaly AS "detectedAnomaly"
+     FROM readings
+     WHERE node_id = $1 AND metric = $2 AND time > NOW() - make_interval(mins => $3::int)
+     ORDER BY time ASC`,
+    [nodeId, metric, minutes],
   );
+  return rows;
 }
