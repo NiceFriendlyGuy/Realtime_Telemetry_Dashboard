@@ -5,6 +5,14 @@ export interface Reading {
     value: number;
     timestamp: string;
     anomaly: boolean;
+    detectedAnomaly: boolean;
+}
+
+export interface HistoryPoint {
+    time: string;
+    value: number;
+    anomaly: boolean;
+    detectedAnomaly: boolean;
 }
 
 export interface NodeState {

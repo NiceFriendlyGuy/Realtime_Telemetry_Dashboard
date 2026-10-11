@@ -1,0 +1,11 @@
+<section class="history">
+  <h3 class="history__title">{{ metric() }}, last 15 minutes</h3>
+
+  @if (loadError()) {
+    <p class="history__error">Couldn't load history from the backend. Check that it's running, then select the sensor again.</p>
+  } @else {
+    <div class="history__canvas">
+      <canvas baseChart type="line" [data]="chartData()" [options]="options"></canvas>
+    </div>
+  }
+</section>
