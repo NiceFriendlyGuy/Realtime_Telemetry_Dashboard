@@ -12,9 +12,6 @@ import { HistoryChart } from '../history-chart/history-chart';
 export class NodeGrid {
 
   protected telemetrySocket = inject(TelemetrySocket);
-  constructor() {
-    this.telemetrySocket.connect();
-  }
 
   protected getReadingsForNode(nodeId: string): Reading[] {
     const nodeReadings = this.telemetrySocket.readingsByNode()[nodeId];

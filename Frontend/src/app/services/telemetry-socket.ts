@@ -15,6 +15,10 @@ export class TelemetrySocket {
     private reconnectAttempt = 0;
 
     connect(): void {
+        if (this.socket && this.socket.readyState <= WebSocket.OPEN) {
+            return;
+        }
+        
         this.socket = new WebSocket('ws://localhost:3000/ws');
         
         this.socket.onopen = () => {
