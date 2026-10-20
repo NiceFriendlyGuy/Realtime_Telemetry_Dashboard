@@ -8,21 +8,26 @@ const nodes = new Map<string, NodeState>();
 const OFFLINE_THRESHOLD_MS = 10_000;
 const PRUNE_AFTER_MS = 60_000;
 
+const anomalousMetrics = new Map<string, Set<string>>();
+
+
 export function getAllNodes(): NodeState[] {
   return Array.from(nodes.values());
 }
 
-export function recordReading(nodeId: string, anomaly: boolean): NodeState {
-  const existing = nodes.get(nodeId);
+export function recordReading(nodeId: string, metric: string, anomaly: boolean): NodeState {
+  const state: NodeState = nodes.get(nodeId) ?? { nodeId, lastSeen: '', status: 'healthy' };
 
-  const state: NodeState = existing ?? {
-    nodeId,
-    lastSeen: '',
-    status: 'healthy',
-  };
+  const flagged = anomalousMetrics.get(nodeId) ?? new Set<string>();
+  if (anomaly) {
+    flagged.add(metric);
+  } else {
+    flagged.delete(metric);
+  }
+  anomalousMetrics.set(nodeId, flagged);
 
   state.lastSeen = new Date().toISOString();
-  state.status = anomaly ? 'warning' : 'healthy';
+  state.status = flagged.size > 0 ? 'warning' : 'healthy';
 
   nodes.set(nodeId, state);
   return state;
@@ -46,6 +51,7 @@ export function sweepOfflineNodes(): NodeState[] {
 
 export function resetNodeState(): void {
   nodes.clear();
+  anomalousMetrics.clear();
 }
 
 export function pruneStaleNodes(): string[] {
@@ -56,6 +62,7 @@ export function pruneStaleNodes(): string[] {
     const age = now - new Date(state.lastSeen).getTime();
     if (age > PRUNE_AFTER_MS) {
       nodes.delete(nodeId);
+      anomalousMetrics.delete(nodeId);
       removed.push(nodeId);
     }
   }

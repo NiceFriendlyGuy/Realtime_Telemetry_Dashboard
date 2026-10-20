@@ -8,6 +8,7 @@ import express from 'express';
 import { isAnomaly } from './anomalyDetection.js';
 import { sweepOfflineNodes, recordReading, pruneStaleNodes, getAllNodes } from './nodeState.js';
 import cors from 'cors';
+import { evaluateReading, getActiveAlerts, dropNodeAlerts } from './alerts.js';
 
 console.log("Backend starting...");
 
@@ -39,7 +40,12 @@ app.get('/api/readings/:nodeId/:metric', async (req, res) => {
 wss.on('connection', (socket) => {
   console.log('Dashboard client connected');
 
-  socket.send(JSON.stringify({ type: 'snapshot', payload: getAllNodes() }));
+  socket.send(
+    JSON.stringify({
+      type: 'snapshot',
+      payload: { nodes: getAllNodes(), alerts: getActiveAlerts() },
+    }),
+  );
 
   socket.on('close', () => {
     console.log('Dashboard client disconnected');
@@ -101,7 +107,14 @@ client.on('message', async (topic, payload) => {
 
   const reading = result.data;
   const detectedAnomaly = isAnomaly(reading.metric, reading.value)
-  const nodeState = recordReading(reading.nodeId, detectedAnomaly);
+  const nodeState = recordReading(reading.nodeId, reading.metric, detectedAnomaly);
+
+  const alert = evaluateReading(reading, detectedAnomaly);
+  if (alert) {
+    console.log(`Alert ${alert.status}: ${alert.nodeId} ${alert.metric}`);
+    broadcast('alert', alert);
+  }
+
   try {
     await insertReading(reading, detectedAnomaly);
     console.log('Saved reading:', reading, '| detectedAnomaly:', detectedAnomaly);
@@ -126,6 +139,9 @@ setInterval(() => {
 
   for (const nodeId of pruneStaleNodes()) {
     broadcast('nodeRemoved', { nodeId });
+    for (const alert of dropNodeAlerts(nodeId)) {
+      broadcast('alert', alert);
+    }
   }
   
 }, intervalTime);
