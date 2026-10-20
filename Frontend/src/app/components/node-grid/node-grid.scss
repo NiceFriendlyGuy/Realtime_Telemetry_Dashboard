@@ -90,4 +90,10 @@
     padding: 0.25rem 0.75rem;
     cursor: pointer;
   }
+
+  &__charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+  }
 }

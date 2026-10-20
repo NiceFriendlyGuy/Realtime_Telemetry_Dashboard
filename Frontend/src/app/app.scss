@@ -1,3 +1,26 @@
 .content{
     padding: 2%;
 }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem;
+
+  &__aside {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+
+    &__aside {
+      position: static;
+    }
+  }
+}

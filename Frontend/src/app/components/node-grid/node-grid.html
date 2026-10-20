@@ -23,9 +23,10 @@
       <h2 class="detail__title">{{ node.nodeId }}</h2>
       <button type="button" class="detail__close" (click)="selectedNodeId.set(null)">Close</button>
     </div>
-
-    @for (reading of getReadingsForNode(node.nodeId); track reading.metric) {
-      <app-history-chart [nodeId]="node.nodeId" [metric]="reading.metric" />
-    }
+    <div class="detail__charts">
+      @for (reading of getReadingsForNode(node.nodeId); track reading.metric) {
+        <app-history-chart [nodeId]="node.nodeId" [metric]="reading.metric" />
+      }
+    </div>
   </section>
 }

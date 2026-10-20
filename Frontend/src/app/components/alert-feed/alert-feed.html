@@ -1,0 +1,17 @@
+<section class="alert-feed" aria-label="Alerts" aria-live="polite">
+  <h2 class="alert-feed__title">Alerts</h2>
+
+  @for (alert of telemetrySocket.alertFeed(); track alert.id) {
+    <article class="alert" [class.alert--active]="alert.status === 'active'">
+      <div class="alert__head">
+        <span>{{ alert.metric }}</span>
+        <span class="alert__state">{{ alert.status === 'active' ? 'Active' : 'Resolved' }}</span>
+      </div>
+      <div class="alert__meta">
+        {{ alert.nodeId }} · worst {{ alert.worstValue | number: '1.0-2' }} {{ alert.unit }} · since {{ alert.startedAt | date: 'HH:mm:ss' }}
+      </div>
+    </article>
+  } @empty {
+    <p class="alert-feed__empty">No alerts. All sensors are within limits.</p>
+  }
+</section>

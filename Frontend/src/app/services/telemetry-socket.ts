@@ -1,6 +1,8 @@
 import { Service } from '@angular/core';
-import { NodeState, GatewayMessage, Reading } from '../models/telemetry';
+import { NodeState, GatewayMessage, Reading, Alert } from '../models/telemetry';
 import { signal, computed } from '@angular/core';
+
+const MAX_ALERTS = 50;
 
 @Service()
 export class TelemetrySocket {
@@ -13,6 +15,11 @@ export class TelemetrySocket {
     readonly readingsByNode = computed(() => this.readings());
 
     private reconnectAttempt = 0;
+
+
+    private alerts = signal<Alert[]>([]);
+    readonly alertFeed = this.alerts.asReadonly();
+        
 
     connect(): void {
         if (this.socket && this.socket.readyState <= WebSocket.OPEN) {
@@ -38,7 +45,18 @@ export class TelemetrySocket {
             console.log('Recieved:', event.data);
 
             if (message.type === 'snapshot') {
-                this.nodes.set(Object.fromEntries(message.payload.map(n => [n.nodeId, n])));
+                this.nodes.set(Object.fromEntries(message.payload.nodes.map((n) => [n.nodeId, n])));
+                this.alerts.update((current) => [
+                    ...message.payload.alerts,
+                    ...current.filter((a) => a.status === 'resolved'),
+                ]);
+            }
+
+            else if (message.type === 'alert') {
+                const incoming = message.payload;
+                this.alerts.update((current) =>
+                    [incoming, ...current.filter((a) => a.id !== incoming.id)].slice(0, MAX_ALERTS),
+                );
             }
             else if (message.type === 'nodeState'){
                 this.nodes.update(current => ({ ...current, [message.payload.nodeId]: message.payload }));
