@@ -1,5 +1,5 @@
 import mqtt from 'mqtt';
-import { getNextReading } from './simulator.js';
+import { createSimulator } from './simulator.js';
 
 const client = mqtt.connect(process.env.MQTT_URL ?? 'mqtt://localhost:1883');
 
@@ -13,12 +13,13 @@ client.on('error', (err) => {
 
 console.log("Devices-Simulator starting...");
 
-setInterval(() => {
-    const reading = getNextReading();
-    const topic = `telemetry/${reading.nodeId}/reading`;
-    const readingString = JSON.stringify(reading);
+const nextReadings = createSimulator();
 
-    console.log(`[${reading.nodeId}] Reading: ${reading.value.toFixed(2)}°C`);
-    client.publish(topic, readingString)
-    
+
+setInterval(() => {
+  for (const reading of nextReadings()) {
+    const topic = `telemetry/${reading.nodeId}/reading`;
+    client.publish(topic, JSON.stringify(reading));
+    console.log(`[${reading.nodeId}] ${reading.metric}: ${reading.value.toFixed(2)} ${reading.unit}`);
+  }
 }, 2000);

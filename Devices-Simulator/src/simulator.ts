@@ -1,29 +1,64 @@
-let currentTemp = 22;
-const SPIKE_CHANCE = 0.98;
-const SPIKE_TEMP_ADDED = 15;
-const BASE_LINE_PULLBACK = 0.1;
-const DRIFT_STRENGTH = 0.5;
-const BASELINE_TEMP = 22;
-const NODE_ID: string = process.env.NODE_ID ?? `sensor-${Math.random().toString(36).slice(2, 7)}`;
+export const NODE_ID: string = process.env.NODE_ID ?? `sensor-${Math.random().toString(36).slice(2, 7)}`;
 
 export interface Reading {
-    nodeId: string;
-    metric: string;
-    unit: string;
-    value: number;
-    timestamp: string;
-    anomaly: boolean;
+  nodeId: string;
+  metric: string;
+  unit: string;
+  value: number;
+  timestamp: string;
+  anomaly: boolean;
 }
 
-export function getNextReading(): Reading {
-    let anomaly = false;
-    const drift = (Math.random() * 2 - 1) * DRIFT_STRENGTH;
-    const pullToBaseline = (BASELINE_TEMP - currentTemp) * BASE_LINE_PULLBACK;
+interface MetricConfig {
+  metric: string;
+  unit: string;
+  baseline: number;
+  driftStrength: number;
+  pullback: number;
+  spikeChance: number; // probability per tick, 0 to 1
+  spikeSize: number;
+}
 
-    currentTemp += drift + pullToBaseline;
-    if(Math.random() >= SPIKE_CHANCE){
-        currentTemp += SPIKE_TEMP_ADDED;
-        anomaly = true;
+export const METRICS: MetricConfig[] = [
+  { metric: 'Temperature',   unit: 'C',     baseline: 22,   driftStrength: 0.5,  pullback: 0.1, spikeChance: 0.02,  spikeSize: 15 },
+  { metric: 'Voltage',       unit: 'V',     baseline: 12,   driftStrength: 0.05, pullback: 0.1, spikeChance: 0.01,  spikeSize: -2.5 },
+  { metric: 'EventRate',     unit: 'Hz',    baseline: 850,  driftStrength: 25,   pullback: 0.1, spikeChance: 0.015, spikeSize: 400 },
+  { metric: 'RadiationDose', unit: 'µSv/h', baseline: 0.12, driftStrength: 0.01, pullback: 0.1, spikeChance: 0.01,  spikeSize: 0.6 },
+];
+
+class MetricSimulator {
+  private current: number;
+  private readonly config: MetricConfig;
+
+  constructor(config: MetricConfig) {
+    this.config = config;
+    this.current = config.baseline;
+  }
+
+  next(): Reading {
+    const { baseline, driftStrength, pullback, spikeChance, spikeSize } = this.config;
+
+    const drift = (Math.random() * 2 - 1) * driftStrength;
+    const pullToBaseline = (baseline - this.current) * pullback;
+    this.current += drift + pullToBaseline;
+
+    const anomaly = Math.random() < spikeChance;
+    if (anomaly) {
+      this.current += spikeSize;
+    }
+
+    return {
+      nodeId: NODE_ID,
+      metric: this.config.metric,
+      unit: this.config.unit,
+      value: this.current,
+      timestamp: new Date().toISOString(),
+      anomaly,
     };
-    return {nodeId:NODE_ID, metric: "Temperature", unit: "C", value: currentTemp, timestamp: new Date().toISOString(), anomaly: anomaly};
+  }
+}
+
+export function createSimulator(): () => Reading[] {
+  const simulators = METRICS.map((config) => new MetricSimulator(config));
+  return () => simulators.map((simulator) => simulator.next());
 }

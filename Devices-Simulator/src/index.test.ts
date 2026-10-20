@@ -1,19 +1,49 @@
-import { describe, it, expect } from "vitest";
-import { getNextReading } from "./simulator.js";
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { createSimulator, METRICS } from './simulator.js';
 
-describe('getNextReading', () => {
-    it('returns a number', () => {
-        const result = getNextReading();
-        expect(result.value).toEqual(expect.any(Number));
+describe('createSimulator', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
-    it('check if anomaly is a bool', () =>{
-        const result = getNextReading();
-        expect(result.anomaly).toEqual(expect.any(Boolean));
+    it('emits one reading per configured metric', () => {
+        const readings = createSimulator()();
+        expect(readings.map((r) => r.metric)).toEqual(METRICS.map((m) => m.metric));
     });
 
-    it('never produces NaN', () => {
-        const result = getNextReading();
-        expect(Number.isNaN(result.value)).toBe(false);
+    it('never produces NaN or Infinity', () => {
+        const next = createSimulator();
+        for (let i = 0; i < 500; i++) {
+            for (const reading of next()) {
+                expect(Number.isFinite(reading.value)).toBe(true);
+            }
+        }
     });
-})
+
+    it('stays at baseline when drift is zero and no spike fires', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0.5);
+        const readings = createSimulator()();
+
+        readings.forEach((reading, i) => {
+            const config = METRICS[i];
+            if (!config) throw new Error(`No metric config at index ${i}`);
+
+            expect(reading.anomaly).toBe(false);
+            expect(reading.value).toBeCloseTo(config.baseline);
+        });
+    });
+
+    it('flags a spike and applies its size', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        const readings = createSimulator()();
+
+        readings.forEach((reading, i) => {
+            const config = METRICS[i];
+            if (!config) throw new Error(`No metric config at index ${i}`);
+
+            const { baseline, driftStrength, spikeSize } = config;
+            expect(reading.anomaly).toBe(true);
+            expect(reading.value).toBeCloseTo(baseline - driftStrength + spikeSize);
+        });
+    });
+});
