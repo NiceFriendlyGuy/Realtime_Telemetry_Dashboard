@@ -3,6 +3,7 @@ import { NodeState, GatewayMessage, Reading, Alert } from '../models/telemetry';
 import { signal, computed } from '@angular/core';
 
 const MAX_ALERTS = 50;
+export const RESOLVED_ALERT_TTL_MS = 60_000;
 
 @Service()
 export class TelemetrySocket {
@@ -54,9 +55,16 @@ export class TelemetrySocket {
 
             else if (message.type === 'alert') {
                 const incoming = message.payload;
+
                 this.alerts.update((current) =>
                     [incoming, ...current.filter((a) => a.id !== incoming.id)].slice(0, MAX_ALERTS),
                 );
+
+                if (incoming.status === 'resolved') {
+                    setTimeout(() => {
+                        this.alerts.update((current) => current.filter((a) => a.id !== incoming.id));
+                    }, RESOLVED_ALERT_TTL_MS);
+                }
             }
             else if (message.type === 'nodeState'){
                 this.nodes.update(current => ({ ...current, [message.payload.nodeId]: message.payload }));
