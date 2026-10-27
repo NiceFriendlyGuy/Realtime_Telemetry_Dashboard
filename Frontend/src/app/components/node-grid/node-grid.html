@@ -1,8 +1,9 @@
 <div class="node-grid">
   @for (node of telemetrySocket.nodeList(); track node.nodeId) {
-  <div class="node-card" [class]="node.status" [class.selected]="node.nodeId === selectedNodeId()" role="button"
-    tabindex="0" [attr.aria-pressed]="node.nodeId === selectedNodeId()" (click)="select(node.nodeId)"
-    (keydown.enter)="select(node.nodeId)" (keydown.space)="select(node.nodeId); $event.preventDefault()">
+  <div class="node-card" [class]="node.status" [class.selected]="node.nodeId === selection.selectedNodeId()"
+    [attr.aria-pressed]="node.nodeId === selection.selectedNodeId()" (click)="selection.toggle(node.nodeId)"
+    (keydown.enter)="selection.toggle(node.nodeId)"
+    (keydown.space)="selection.toggle(node.nodeId); $event.preventDefault()">
     <div class="node-card__header">
       <span class="node-card__id">{{ node.nodeId }}</span>
       <span class="node-card__status">{{ node.status }}</span>
@@ -18,15 +19,15 @@
   }
 </div>
 @if (selectedNode(); as node) {
-  <section class="detail">
-    <div class="detail__header">
-      <h2 class="detail__title">{{ node.nodeId }}</h2>
-      <button type="button" class="detail__close" (click)="selectedNodeId.set(null)">Close</button>
-    </div>
-    <div class="detail__charts">
-      @for (reading of getReadingsForNode(node.nodeId); track reading.metric) {
-        <app-history-chart [nodeId]="node.nodeId" [metric]="reading.metric" />
-      }
-    </div>
-  </section>
+<section class="detail"  #detail>
+  <div class="detail__header">
+    <h2 class="detail__title">{{ node.nodeId }}</h2>
+    <button type="button" class="detail__close" (click)="selection.clear()">Close</button>
+  </div>
+  <div class="detail__charts">
+    @for (reading of getReadingsForNode(node.nodeId); track reading.metric) {
+    <app-history-chart [nodeId]="node.nodeId" [metric]="reading.metric" />
+    }
+  </div>
+</section>
 }

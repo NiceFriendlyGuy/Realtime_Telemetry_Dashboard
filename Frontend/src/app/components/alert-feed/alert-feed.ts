@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { TelemetrySocket } from '../../services/telemetry-socket';
+import { DashboardSelection } from '../../services/dashboard-selection';
 
 @Component({
   selector: 'app-alert-feed',
@@ -10,4 +11,9 @@ import { TelemetrySocket } from '../../services/telemetry-socket';
 })
 export class AlertFeed {
   protected readonly telemetrySocket = inject(TelemetrySocket);
+  protected readonly selection = inject(DashboardSelection);
+
+  protected readonly knownNodeIds = computed(
+    () => new Set(this.telemetrySocket.nodeList().map((n) => n.nodeId)),
+  );
 }

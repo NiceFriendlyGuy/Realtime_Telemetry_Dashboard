@@ -1,7 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, effect, signal, viewChild  } from '@angular/core';
 import { TelemetrySocket } from '../../services/telemetry-socket';
 import { Reading } from '../../models/telemetry';
 import { HistoryChart } from '../history-chart/history-chart';
+import { DashboardSelection } from '../../services/dashboard-selection';
 
 @Component({
   selector: 'app-node-grid',
@@ -12,6 +13,7 @@ import { HistoryChart } from '../history-chart/history-chart';
 export class NodeGrid {
 
   protected telemetrySocket = inject(TelemetrySocket);
+  protected readonly selection = inject(DashboardSelection);
 
   protected getReadingsForNode(nodeId: string): Reading[] {
     const nodeReadings = this.telemetrySocket.readingsByNode()[nodeId];
@@ -21,10 +23,22 @@ export class NodeGrid {
   protected readonly selectedNodeId = signal<string | null>(null);
 
   protected readonly selectedNode = computed(
-    () => this.telemetrySocket.nodeList().find((n) => n.nodeId === this.selectedNodeId()) ?? null,
+    () =>
+      this.telemetrySocket.nodeList().find((n) => n.nodeId === this.selection.selectedNodeId()) ?? null,
   );
 
   protected select(nodeId: string): void {
     this.selectedNodeId.update((current) => (current === nodeId ? null : nodeId));
   }
+
+  private readonly detail = viewChild<ElementRef<HTMLElement>>('detail');
+
+  constructor() {
+    // Bring the panel into view when a sensor is opened, e.g. from an alert far from the grid.
+    effect(() => {
+      this.selection.selectedNodeId();
+      this.detail()?.nativeElement.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
 }
