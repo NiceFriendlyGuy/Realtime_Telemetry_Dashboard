@@ -26,8 +26,10 @@ export class TelemetrySocket {
         if (this.socket && this.socket.readyState <= WebSocket.OPEN) {
             return;
         }
-        
-        this.socket = new WebSocket('ws://localhost:3000/ws');
+
+        const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+        this.socket = new WebSocket(`${scheme}://${location.host}/ws`);
+        //this.socket = new WebSocket('ws://localhost:3000/ws');
         
         this.socket.onopen = () => {
             console.log('Connected to backend WebSocket');

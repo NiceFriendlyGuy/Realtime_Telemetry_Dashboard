@@ -7,7 +7,6 @@ import { WebSocketServer } from 'ws';
 import express from 'express';
 import { isAnomaly } from './anomalyDetection.js';
 import { sweepOfflineNodes, recordReading, pruneStaleNodes, getAllNodes } from './nodeState.js';
-import cors from 'cors';
 import { evaluateReading, getActiveAlerts, dropNodeAlerts } from './alerts.js';
 
 console.log("Backend starting...");
@@ -17,7 +16,6 @@ const PORT = Number(process.env.PORT ?? 3000);
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({server, path:'/ws' });
-app.use(cors({ origin: process.env.CORS_ORIGIN ?? 'http://localhost:4200' }));
 
 
 app.get('/api/readings/:nodeId/:metric', async (req, res) => {

@@ -4,7 +4,7 @@ import type { ChartConfiguration } from 'chart.js';
 import { TelemetrySocket } from '../../services/telemetry-socket';
 import { HistoryPoint } from '../../models/telemetry';
 
-const API_URL = 'http://localhost:3000';
+//const API_URL = 'http://localhost:3000';
 const HISTORY_MINUTES = 15;
 const MAX_POINTS = 600;
 
@@ -33,7 +33,8 @@ export class HistoryChart {
       this.points.set([]);
       this.loadError.set(false);
 
-      const url = `${API_URL}/api/readings/${encodeURIComponent(nodeId)}/${encodeURIComponent(metric)}?minutes=${HISTORY_MINUTES}`;
+      //const url = `${API_URL}/api/readings/${encodeURIComponent(nodeId)}/${encodeURIComponent(metric)}?minutes=${HISTORY_MINUTES}`;
+      const url = `/api/readings/${encodeURIComponent(nodeId)}/${encodeURIComponent(metric)}?minutes=${HISTORY_MINUTES}`;
 
       fetch(url, { signal: controller.signal })
         .then((res) => {

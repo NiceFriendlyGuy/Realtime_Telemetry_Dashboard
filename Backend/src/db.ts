@@ -22,14 +22,21 @@ export async function initDb(): Promise<void> {
         );
         `);
 
-        await pool.query(`
+
+    await pool.query(`
             SELECT create_hypertable('readings', 'time', if_not_exists => TRUE, migrate_data => TRUE);
         `);
-        await pool.query(`
+    await pool.query(`
+        SELECT set_chunk_time_interval('readings', INTERVAL '1 day');
+        `);
+    await pool.query(`
+        SELECT add_retention_policy('readings', INTERVAL '3 days', if_not_exists => TRUE);
+        `);
+    await pool.query(`
             CREATE INDEX IF NOT EXISTS idx_readings_node_metric_time ON readings (node_id, metric, time DESC);
         `);
 
-        console.log('Reading table ready');
+    console.log('Reading table ready');
 }
 
 export async function insertReading(reading: {

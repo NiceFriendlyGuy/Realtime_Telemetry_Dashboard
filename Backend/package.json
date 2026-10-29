@@ -16,7 +16,6 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
     "@types/pg": "^8.20.4",
@@ -28,7 +27,6 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "cors": "^2.8.6",
     "express": "^5.2.1",
     "mqtt": "^5.15.2",
     "pg": "^8.22.0",
