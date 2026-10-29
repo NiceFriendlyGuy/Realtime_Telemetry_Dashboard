@@ -1,0 +1,80 @@
+name: telemetry
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    mem_limit: 64m
+    logging: *logging
+
+  timescaledb:
+    image: timescale/timescaledb:2.23.0-pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: telemetry
+      TS_TUNE_MEMORY: 512MB
+      TS_TUNE_NUM_CPUS: 1
+    volumes:
+      - timescale_data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U telemetry -d telemetry']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 768m
+    logging: *logging
+
+  backend:
+    image: ghcr.io/nicefriendlyguy/telemetry-backend:latest
+    restart: unless-stopped
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+      DATABASE_URL: postgres://telemetry:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@timescaledb:5432/telemetry
+      PORT: 3000
+    depends_on:
+      mosquitto:
+        condition: service_started
+      timescaledb:
+        condition: service_healthy
+    mem_limit: 256m
+    logging: *logging
+
+  frontend:
+    image: ghcr.io/nicefriendlyguy/telemetry-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      default:
+      proxy:
+        aliases:
+          - telemetry-frontend
+    mem_limit: 64m
+    logging: *logging
+
+  devices-simulator:
+    image: ghcr.io/nicefriendlyguy/telemetry-devices-simulator:latest
+    restart: unless-stopped
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+    depends_on:
+      - mosquitto
+    deploy:
+      replicas: 4
+    mem_limit: 96m
+    logging: *logging
+
+networks:
+  proxy:
+    external: true
+
+volumes:
+  timescale_data:

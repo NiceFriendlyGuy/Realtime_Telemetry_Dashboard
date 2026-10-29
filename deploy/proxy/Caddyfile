@@ -1,0 +1,3 @@
+telemetry.giannicontreras.ch {
+  reverse_proxy telemetry-frontend:80
+}
